@@ -2,44 +2,58 @@ package main
 
 import (
 	"fmt"
+	"time"
 
+	"./log"
 	"./request"
 )
 
 func main() {
-	query := map[string]string{}
-	query["language"] = "swift"
+	id := execProgram()
+	getResult(id)
+}
+
+func execProgram() string {
+	// TODO: language type
+	query := map[string]string{"language": "swift", "api_key": "guest"}
 	// TODO: add after parse
 	query["source_code"] = "print(114514)"
-	query["api_key"] = "guest"
 
-	// --- REQUEST ---
-	createChannel := make(chan request.CreateIDResult)
-	go request.CreateID(query, createChannel)
+	ch := make(chan request.StatusResult)
+	go request.ExecProgramRequest(query, ch)
 
-	// --- LOG ---
-	fmt.Println("⚙️  pre <-createChannel")
-	createResult := <-createChannel
-	fmt.Println("️⚙️  post <-createChannel")
+	result := <-ch
 
-	// --- ERROR ---
-	if createResult.Err != nil {
-		fmt.Println(createResult.Err)
-		return
+	if result.Err != nil {
+		fmt.Println(result.Err)
+		return ""
 	}
 
-	// --- REQUEST ---
-	detailChannel := make(chan request.GetDetailsResult)
-	go request.GetDetails(map[string]string{"id": createResult.Response.ID, "api_key": "guest"}, detailChannel)
+	log.PrintFields(&result.Response)
 
-	// --- LOG ---
-	fmt.Println("️⚙️  pre <-detailChannel")
-	detailResult := <-detailChannel
-	fmt.Println("⚙️  post <-detailChannel")
+	return result.Response.ID
+}
 
-	// --- ERROR ---
+func getResult(id string) {
+	query := map[string]string{"id": id, "api_key": "guest"}
+
+	// wait execute program until completed
+	for status := "runnig"; status != "completed"; time.Sleep(1 * time.Second) {
+		ch := make(chan request.StatusResult)
+		go request.GetStatusRequest(query, ch)
+		statusResult := <-ch
+		status = statusResult.Response.Status
+	}
+
+	ch := make(chan request.ExecutionResult)
+	go request.GetResultRequest(query, ch)
+
+	detailResult := <-ch
+
 	if detailResult.Err != nil {
 		fmt.Println(detailResult.Err)
 		return
 	}
+
+	log.PrintFields(&detailResult.Response)
 }
