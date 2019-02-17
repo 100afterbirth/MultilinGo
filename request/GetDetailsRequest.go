@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/TakumiKaribe/MultilinGo/model"
+	"../model"
 )
 
 type GetDetailsResult struct {

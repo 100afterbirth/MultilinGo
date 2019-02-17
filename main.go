@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/TakumiKaribe/MultilinGo/request"
+	"./request"
 )
 
 func main() {
