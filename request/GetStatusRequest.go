@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/TakumiKaribe/MultilinGo/model"
+	"../model"
 )
 
 // GetStatusRequest is request to get execution status
